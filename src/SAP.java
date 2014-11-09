@@ -36,7 +36,7 @@ public class SAP {
         BreadthFirstDirectedPaths bfdpFromW = new BreadthFirstDirectedPaths(localGraph, w);
         int minCommonDist = -1;
         for (int i = 0; i < vertexInGraph; i++) {
-            if (i != w && i != v && bfdpFromV.hasPathTo(i) && bfdpFromW.hasPathTo(i)) {
+            if (bfdpFromV.hasPathTo(i) && bfdpFromW.hasPathTo(i)) {
                 int currentDist = bfdpFromV.distTo(i) + bfdpFromW.distTo(i);
                 if (minCommonDist < 0) {
                     minCommonDist = currentDist;
@@ -61,7 +61,7 @@ public class SAP {
         BreadthFirstDirectedPaths bfdpFromW = new BreadthFirstDirectedPaths(localGraph, w);
         int minCommonDist = -1, commonAncestor = -1;
         for (int i = 0; i < vertexInGraph; i++) {
-            if (i != w && i != v && bfdpFromV.hasPathTo(i) && bfdpFromW.hasPathTo(i)) {
+            if (bfdpFromV.hasPathTo(i) && bfdpFromW.hasPathTo(i)) {
                 int currentDist = bfdpFromV.distTo(i) + bfdpFromW.distTo(i);
                 if (minCommonDist < 0) {
                     minCommonDist = currentDist;
