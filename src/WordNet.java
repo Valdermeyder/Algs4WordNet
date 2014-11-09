@@ -13,58 +13,41 @@ public class WordNet {
         if (synsets == null || hypernyms == null) {
             throw new NullPointerException("Synsets or hypernyms are null");
         }
-        In in = new In(synsets);
-        List<String> synsetLines = new ArrayList<String>();
-        String readString;
-        while ((readString = in.readLine()) != null) {
-            synsetLines.add(readString);
-        }
-        in = new In(hypernyms);
-        List<String> hypernymsLines = new ArrayList<String>();
-        while ((readString = in.readLine()) != null) {
-            hypernymsLines.add(readString);
-        }
+        List<String> synsetLines = readAllStringsFromInput(synsets);
         final int synsetSize = synsetLines.size();
         nounToVertexMap = new HashMap<String, Integer>(synsetSize);
-        Map<Integer, String> idToSynsetMap = new HashMap<Integer, String>(synsetSize);
-        for (int i = 0; i < synsetSize; i++) {
-            String synsetLine = synsetLines.get(i);
+        for (String synsetLine : synsetLines) {
             String[] splitted = synsetLine.split(",");
             if (splitted.length == 3) {
                 String[] nouns = splitted[1].split(" ");
                 for (String noun : nouns) {
-                    nounToVertexMap.put(noun, i);
+                    nounToVertexMap.put(noun, Integer.valueOf(splitted[0]));
                 }
-                idToSynsetMap.put(Integer.valueOf(splitted[0]), splitted[1]);
             }
         }
+
+        List<String> hypernymsLines = readAllStringsFromInput(hypernyms);
         wordsDigraph = new Digraph(synsetSize);
         for (String hypernymsLine : hypernymsLines) {
             String[] hypernymsArr = hypernymsLine.split(",");
             if (hypernymsArr.length > 1) {
-                String rootNoun = idToSynsetMap.get(Integer.parseInt(hypernymsArr[0]));
-                if (rootNoun != null) {
-                    final int indexOf = rootNoun.indexOf(' ');
-                    int rootNounId = nounToVertexMap.get(indexOf == -1 ? rootNoun : rootNoun.substring(0, indexOf));
-                    for (int i = 1; i < hypernymsArr.length; i++) {
-                        String hypertmedNoun = idToSynsetMap.get(Integer.parseInt(hypernymsArr[i]));
-                        if (hypertmedNoun != null) {
-                            final int indexOfSpace = hypertmedNoun.indexOf(' ');
-                            wordsDigraph.addEdge(rootNounId, nounToVertexMap.get(indexOfSpace == -1 ? hypertmedNoun : hypertmedNoun.substring(0, indexOfSpace)));
-                        }
-                    }
+                final int rootNode = Integer.parseInt(hypernymsArr[0]);
+                for (int i = 1; i < hypernymsArr.length; i++) {
+                    wordsDigraph.addEdge(rootNode, Integer.parseInt(hypernymsArr[i]));
                 }
             }
         }
-        DirectedCycle directedCycle = new DirectedCycle(wordsDigraph);
+/*        DirectedCycle directedCycle = new DirectedCycle(wordsDigraph);
         if (!directedCycle.hasCycle()) {
             throw new IllegalArgumentException("Input files do not represent DAG");
-        }
+        }*/
         sap = new SAP(wordsDigraph);
     }
 
     // do unit testing of this class
     public static void main(String[] args) {
+        WordNet wordNet = new WordNet("synsets.txt", "hypernyms.txt");
+        System.out.println("Distance between communications and spunk = " + wordNet.distance("communications", "spunk"));
     }
 
     // returns all WordNet nouns
@@ -111,7 +94,7 @@ public class WordNet {
         int minCommonDist = -1;
         for (Map.Entry<String, Integer> synset : nounToVertexMap.entrySet()) {
             final Integer synsetValue = synset.getValue();
-            if (!synsetValue.equals(vertexA) && !synsetValue.equals(vertexB) && bfdpFromA.hasPathTo(synsetValue) && bfdpFromB.hasPathTo(synsetValue)) {
+            if (bfdpFromA.hasPathTo(synsetValue) && bfdpFromB.hasPathTo(synsetValue)) {
                 int currentDist = bfdpFromA.distTo(synsetValue) + bfdpFromB.distTo(synsetValue);
                 if (minCommonDist < 0) {
                     minCommonDist = currentDist;
@@ -123,5 +106,15 @@ public class WordNet {
             }
         }
         return commonAncestorNoun;
+    }
+
+    private List<String> readAllStringsFromInput(String fileName) {
+        In in = new In(fileName);
+        List<String> readLines = new ArrayList<String>();
+        String readString;
+        while ((readString = in.readLine()) != null) {
+            readLines.add(readString);
+        }
+        return readLines;
     }
 }

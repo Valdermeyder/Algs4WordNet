@@ -6,7 +6,7 @@ public class SAP {
         if (G == null) {
             throw new NullPointerException("Graph is null");
         }
-        localGraph = G;
+        localGraph = new Digraph(G);
     }
 
     // do unit testing of this class
