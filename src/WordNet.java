@@ -2,7 +2,7 @@ import java.util.*;
 import java.util.Stack;
 
 public class WordNet {
-    private Map<String, Integer> nounToVertexMap;
+    private Map<String, Stack<Integer>> nounToVertexMap;
     private String[] nounsArr;
     private SAP sap;
 
@@ -13,14 +13,21 @@ public class WordNet {
         }
         List<String> synsetLines = readAllStringsFromInput(synsets);
         final int synsetSize = synsetLines.size();
-        nounToVertexMap = new HashMap<String, Integer>(synsetSize);
+        nounToVertexMap = new HashMap<String, Stack<Integer>>(synsetSize);
         nounsArr = new String[synsetSize];
         for (String synsetLine : synsetLines) {
             String[] splitted = synsetLine.split(",");
             if (splitted.length >= 2) {
                 final Integer index = Integer.valueOf(splitted[0]);
                 for (String noun : splitted[1].split(" ")) {
-                    nounToVertexMap.put(noun, index);
+                    final Stack<Integer> vertex = nounToVertexMap.get(noun);
+                    if (vertex == null) {
+                        final Stack<Integer> newVertex = new Stack<Integer>();
+                        newVertex.push(index);
+                        nounToVertexMap.put(noun, newVertex);
+                    } else {
+                        vertex.push(index);
+                    }
                 }
                 nounsArr[index] = splitted[1];
             }
@@ -60,8 +67,8 @@ public class WordNet {
     // do unit testing of this class
     public static void main(String[] args) {
         WordNet wordNet = new WordNet("synsets.txt", "hypernyms.txt");
-        System.out.println("Distance between communications and spunk = " + wordNet.distance("communications", "spunk"));
-        System.out.println("SAP for communications and spunk = " + wordNet.sap("communications", "spunk"));
+        System.out.println("Distance between communications and spunk = " + wordNet.distance("Abutilon", "ghostfish"));
+        System.out.println("SAP for communications and spunk = " + wordNet.sap("Abutilon", "ghostfish"));
     }
 
     // returns all WordNet nounsArr
@@ -82,18 +89,9 @@ public class WordNet {
         if (nounA == null || nounB == null) {
             throw new NullPointerException("nounA or nounB is null");
         }
-        Stack<Integer> vertexA = new Stack<Integer>(), vertexB = new Stack<Integer>();
-        for (int i = 0; i < nounsArr.length; i++) {
-            String nouns = nounsArr[i];
-            if (nouns.contains(nounA)) {
-                vertexA.push(i);
-            }
-            if (nouns.contains(nounB)) {
-                vertexB.push(i);
-            }
-        }
-        if (vertexA.isEmpty() || vertexB.isEmpty()) {
-            throw new IllegalArgumentException(nounA + " or " + nounB + " are not a nounsArr");
+        Stack<Integer> vertexA = nounToVertexMap.get(nounA), vertexB = nounToVertexMap.get(nounB);
+        if (vertexA == null || vertexB == null) {
+            throw new IllegalArgumentException(nounA + " or " + nounB + " are not a nouns");
         }
         return sap.length(vertexA, vertexB);
     }
@@ -104,18 +102,9 @@ public class WordNet {
         if (nounA == null || nounB == null) {
             throw new NullPointerException("nounA or nounB is null");
         }
-        Stack<Integer> vertexA = new Stack<Integer>(), vertexB = new Stack<Integer>();
-        for (int i = 0; i < nounsArr.length; i++) {
-            String nouns = nounsArr[i];
-            if (nouns.contains(nounA)) {
-                vertexA.push(i);
-            }
-            if (nouns.contains(nounB)) {
-                vertexB.push(i);
-            }
-        }
-        if (vertexA.isEmpty() || vertexB.isEmpty()) {
-            throw new IllegalArgumentException(nounA + " or " + nounB + " are not a nounsArr");
+        Stack<Integer> vertexA = nounToVertexMap.get(nounA), vertexB = nounToVertexMap.get(nounB);
+        if (vertexA == null || vertexB == null) {
+            throw new IllegalArgumentException(nounA + " or " + nounB + " are not a nouns");
         }
         return nounsArr[sap.ancestor(vertexA, vertexB)];
     }
